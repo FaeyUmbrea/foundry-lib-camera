@@ -1,0 +1,32 @@
+<section>
+  <p>{{localize "LIBCAMERA.Controls.Intro"}}</p>
+  <dl>
+    <dt>{{localize "LIBCAMERA.Controls.Owner"}}</dt><dd>{{#if owner}}{{owner}}{{else}}{{localize "LIBCAMERA.Controls.None"}}{{/if}}</dd>
+    <dt>{{localize "LIBCAMERA.Controls.Input"}}</dt><dd>{{#if locked}}{{localize "LIBCAMERA.Controls.Locked"}}{{else}}{{localize "LIBCAMERA.Controls.Free"}}{{/if}}</dd>
+  </dl>
+  <div class="camera-actions">
+    <button type="button" data-action="panic">{{localize "LIBCAMERA.Controls.Panic"}}</button>
+    <button type="button" data-action="release">{{localize "LIBCAMERA.Controls.Release"}}</button>
+    {{#if disabled}}<button type="button" data-action="resume">{{localize "LIBCAMERA.Controls.Resume"}}</button>{{/if}}
+    <button type="button" data-action="refresh">{{localize "LIBCAMERA.Controls.Refresh"}}</button>
+  </div>
+  {{#if worldDisabled}}<p role="status">{{localize "LIBCAMERA.Controls.WorldDisabled"}}</p>{{/if}}
+  <table>
+    <caption>{{localize "LIBCAMERA.Controls.Priorities"}}</caption>
+    <thead><tr><th>{{localize "LIBCAMERA.Controls.Module"}}</th><th>{{localize "LIBCAMERA.Controls.Effective"}}</th><th>{{localize "LIBCAMERA.Controls.Local"}}</th>{{#if isGM}}<th>{{localize "LIBCAMERA.Controls.Default"}}</th>{{/if}}</tr></thead>
+    <tbody>{{#each consumers}}<tr>
+      <th scope="row">{{name}}</th><td>{{priority}}</td>
+      <td><input type="number" step="1" data-consumer="{{id}}" data-scope="local" value="{{localPriority}}" aria-label="{{name}} — {{localize 'LIBCAMERA.Controls.Local'}}"></td>
+      {{#if ../isGM}}<td><input type="number" step="1" data-consumer="{{id}}" data-scope="world" value="{{defaultPriority}}" aria-label="{{name}} — {{localize 'LIBCAMERA.Controls.Default'}}"></td>{{/if}}
+    </tr>{{/each}}</tbody>
+  </table>
+  <p>{{localize "LIBCAMERA.Controls.Inherit"}}</p>
+  <button type="button" data-action="save">{{localize "LIBCAMERA.Controls.Save"}}</button>
+  {{#if isGM}}<fieldset><legend>{{localize "LIBCAMERA.Controls.World"}}</legend>
+    <button type="button" data-action="world-panic">{{localize "LIBCAMERA.Controls.WorldPanic"}}</button>
+    {{#if worldDisabled}}<button type="button" data-action="world-resume">{{localize "LIBCAMERA.Controls.WorldResume"}}</button>{{/if}}
+  </fieldset>{{/if}}
+  <details><summary>{{localize "LIBCAMERA.Controls.Diagnostics"}}</summary>
+    <ol>{{#each diagnostics}}<li>{{consumerId}}: {{action}}{{#if reason}} ({{reason}}){{/if}}</li>{{/each}}</ol>
+  </details>
+</section>

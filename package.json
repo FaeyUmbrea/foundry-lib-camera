@@ -1,0 +1,40 @@
+{
+	"name": "lib-camera",
+	"version": "1.14.0",
+	"private": true,
+	"type": "module",
+	"packageManager": "yarn@4.9.2",
+	"scripts": {
+		"build": "vite build",
+		"dev": "vite --host",
+		"watch": "vite build --watch",
+		"preview": "vite preview",
+		"typecheck": "tsc -p tsconfig.tests.json",
+		"lint": "eslint src tests tools playwright.config.js vite.config.ts eslint.config.js --max-warnings 0",
+		"lint:fix": "eslint src tests tools playwright.config.js vite.config.ts eslint.config.js --fix",
+		"link:foundry": "node tools/foundryLink.js",
+		"build:api-types": "node tools/build-api-types.mjs",
+		"test:unit": "vitest run",
+		"test:tools": "vitest run --root . tools/",
+		"test:e2e": "playwright test",
+		"test:prepare": "node tools/prepare-foundry-tests.mjs",
+		"release:prepare": "node tools/release.mjs",
+		"test:prepare-install": "node tools/prepare-install-tests.mjs"
+	},
+	"devDependencies": {
+		"@antfu/eslint-config": "^9.0.0",
+		"@playwright/test": "1.60.0",
+		"eslint": "^10.4.0",
+		"eslint-plugin-antfu": "^3.2.3",
+		"eslint-plugin-format": "^2.0.1",
+		"fvtt-types": "13.346.0-beta.20251209192131",
+		"globals": "^17.6.0",
+		"jsdom": "^29.1.1",
+		"rollup-plugin-visualizer": "^7.0.1",
+		"stylus": "^0.64.0",
+		"typescript": "^5.9.3",
+		"vite": "^8.0.13",
+		"vitest": "^4.1.6"
+	},
+	"license": "Apache-2.0"
+}

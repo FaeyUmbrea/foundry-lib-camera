@@ -1,0 +1,16 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"declaration": true,
+		"declarationMap": false,
+		"emitDeclarationOnly": true,
+		"noEmit": false,
+		"outDir": ".release/api-types/package",
+		"rewriteRelativeImportExtensions": true,
+		"stripInternal": true
+	},
+	"include": [
+		"src/public-api.ts"
+	]
+}

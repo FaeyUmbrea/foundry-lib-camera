@@ -1,0 +1,42 @@
+# Changes here are managed by Copier. Re-answer questions with `copier update`.
+_commit: v1.0.4
+_src_path: https://github.com/FaeyUmbrea/module-template.git
+additional_languages: []
+adopt_existing_module: false
+author_discord: Faey#0001
+author_name: Faey Umbrea
+author_url: https://github.com/FaeyUmbrea
+browser_tests: true
+default_branch: main
+exports_api_types: true
+foundry_maximum: '14'
+foundry_minimum: '14'
+foundry_verified: '14.363'
+github_owner: FaeyUmbrea
+has_packs: false
+is_library: true
+localization: true
+module_description: Shared camera ownership, priorities and viewport control for Foundry
+    VTT.
+module_id: lib-camera
+module_kind: code
+module_license: Apache-2.0
+module_media: []
+module_packs: []
+module_relationships:
+    requires:
+        - id: lib-wrapper
+          type: module
+          manifest: https://github.com/ruipin/fvtt-lib-wrapper/releases/latest/download/module.json
+          compatibility:
+              minimum: 1.13.0.0
+    systems: []
+module_scripts: []
+module_title: libCamera
+persistent_storage: false
+release_strategy: custom
+repository_name: foundry-lib-camera
+unit_tests: true
+uses_socket: true
+uses_styles: true
+uses_svelte: false

@@ -1,0 +1,42 @@
+name: Prepare release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: API-major.Foundry-generation.patch[.hotfix], matching this branch
+        required: true
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn lint && yarn typecheck && yarn test:unit && yarn test:tools && yarn build
+      - name: Package verified generation
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: yarn release:prepare "$RELEASE_VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ inputs.version }}
+          path: |
+            .release/${{ inputs.version }}/module.json
+            .release/${{ inputs.version }}/module.zip
+            .release/${{ inputs.version }}/lib-camera-api-types.tgz
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "v$RELEASE_VERSION" \
+            ".release/$RELEASE_VERSION/module.json" \
+            ".release/$RELEASE_VERSION/module.zip" \
+            ".release/$RELEASE_VERSION/lib-camera-api-types.tgz" \
+            --target "$GITHUB_SHA" --draft --latest=false \
+            --title "libCamera $RELEASE_VERSION" --notes-file CHANGELOG.md

@@ -1,0 +1,31 @@
+{
+	"LIBCAMERA": {
+		"Controls": {
+			"Title": "Camera controls",
+			"Open": "Open camera controls",
+			"Intro": "Manage modules that control your camera. Higher priorities take precedence. These controls apply to this client unless marked world-wide.",
+			"Owner": "Current owner",
+			"None": "None",
+			"Input": "Manual input",
+			"Locked": "Temporarily locked",
+			"Free": "Available",
+			"Panic": "Stop and disable camera control",
+			"PanicHint": "Stop library camera movement, restore manual input, and block further control until re-enabled.",
+			"Release": "Release current claim",
+			"Resume": "Re-enable on this client",
+			"Refresh": "Refresh",
+			"WorldDisabled": "Camera control is disabled world-wide. A GM must re-enable it.",
+			"Priorities": "Module priorities",
+			"Module": "Module",
+			"Effective": "Effective",
+			"Local": "This client",
+			"Default": "World default",
+			"Inherit": "Leave an override blank to use the default. Priority changes apply to the next claim.",
+			"Save": "Save priorities",
+			"World": "World-wide controls (GM)",
+			"WorldPanic": "Stop and disable for everyone",
+			"WorldResume": "Re-enable for everyone",
+			"Diagnostics": "Recent ownership events"
+		}
+	}
+}
