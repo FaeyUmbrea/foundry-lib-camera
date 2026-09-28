@@ -9,9 +9,9 @@ author_url: https://github.com/FaeyUmbrea
 browser_tests: true
 default_branch: main
 exports_api_types: true
-foundry_maximum: '14'
-foundry_minimum: '14'
-foundry_verified: '14.363'
+foundry_maximum: '13'
+foundry_minimum: '13.351'
+foundry_verified: '13.351'
 github_owner: FaeyUmbrea
 has_packs: false
 is_library: true

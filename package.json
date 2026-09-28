@@ -1,6 +1,6 @@
 {
 	"name": "lib-camera",
-	"version": "1.14.0",
+	"version": "1.13.0",
 	"private": true,
 	"type": "module",
 	"packageManager": "yarn@4.9.2",
