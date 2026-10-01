@@ -10,8 +10,19 @@ export function parseVersion(version) {
 	return { apiMajor, generation, patch, hotfix };
 }
 
-/** Type packages are private, installed by exact release URL, and never ranged on npm. */
+/** npm ignores build metadata when identifying versions, so hotfixes need a prerelease suffix. */
 export function typePackageVersion(version) {
 	const { apiMajor, generation, patch, hotfix } = parseVersion(version);
-	return `${apiMajor}.${generation}.${patch}${hotfix === undefined ? '' : `+hotfix.${hotfix}`}`;
+	return `${apiMajor}.${generation}.${patch}${hotfix === undefined ? '' : `-hotfix.${hotfix}`}`;
+}
+
+/** Compare in module release order; -hotfix.N represents a later four-part release. */
+export function compareTypePackageVersions(left, right) {
+	const a = parseVersion(left.replace('-hotfix.', '.'));
+	const b = parseVersion(right.replace('-hotfix.', '.'));
+	for (const field of ['apiMajor', 'generation', 'patch', 'hotfix']) {
+		const difference = (a[field] ?? -1) - (b[field] ?? -1);
+		if (difference !== 0) return difference;
+	}
+	return 0;
 }
