@@ -1,0 +1,77 @@
+name: API Types
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to receive the rebuilt artifact
+        required: true
+        type: string
+      source_ref:
+        description: Source ref containing the API declarations
+        required: false
+        type: string
+      update_registry:
+        description: Publish the API package during this manual repair
+        required: true
+        default: false
+        type: boolean
+
+run-name: >-
+  API types for libCamera ${{ inputs.tag || github.event.release.tag_name }}
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  api-types:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_CHANNEL: ${{ vars.RELEASE_CHANNEL || 'public' }}
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || inputs.tag || github.event.release.tag_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build API type package
+        run: |
+          yarn build:api-types
+          tar -czf lib-camera-api-types.tgz -C .release/api-types package
+
+      - name: Compare API type package with npm
+        id: api
+        run: yarn check:api-types
+
+      - name: Use an npm CLI with trusted publishing support
+        if: steps.api.outputs.api_status == 'new' && (github.event_name == 'release' || inputs.update_registry)
+        run: npm install --global npm@11
+
+      - name: Publish premium API prerelease
+        if: env.RELEASE_CHANNEL == 'premium' && steps.api.outputs.api_status == 'new' && (github.event_name == 'release' || inputs.update_registry)
+        run: npm publish .release/api-types/package --access public --tag ea
+
+      - name: Publish public API release
+        if: env.RELEASE_CHANNEL == 'public' && steps.api.outputs.api_status == 'new' && (github.event_name == 'release' || inputs.update_registry)
+        run: npm publish .release/api-types/package --access public
+
+      - name: Upload API type artifact
+        if: steps.api.outputs.api_status != 'existing'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" lib-camera-api-types.tgz --clobber

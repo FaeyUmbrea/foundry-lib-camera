@@ -49,4 +49,5 @@ jobs:
       - name: Build API type artifact
         run: |
           yarn build:api-types
+          npm pack --dry-run --ignore-scripts ./.release/api-types/package
           tar -czf /tmp/lib-camera-api-types.tgz -C .release/api-types package
