@@ -13,3 +13,7 @@ and [Foundry 14](https://github.com/FaeyUmbrea/foundry-lib-camera/releases/tag/v
 - [User documentation](https://docs.void.monster/lib-camera/)
 
 Licensed under Apache-2.0.
+
+## Translation
+
+Help translate on [Void Monster Translations](https://translate.void.monster/projects/lib-camera/module/). Please submit human translations in languages you know.
