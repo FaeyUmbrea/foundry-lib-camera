@@ -40,7 +40,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
 
       - name: Enable Corepack
         run: corepack enable
@@ -51,6 +50,7 @@ jobs:
       - name: Build API type package
         run: |
           yarn build:api-types
+          node --input-type=module -e "import fs from 'node:fs'; const pkg = JSON.parse(fs.readFileSync('.release/api-types/package/package.json', 'utf8')); fs.appendFileSync(process.env.GITHUB_ENV, 'NPM_DIST_TAG=' + pkg.publishConfig.tag + '\n');"
           tar -czf lib-camera-api-types.tgz -C .release/api-types package
 
       - name: Compare API type package with npm
@@ -67,7 +67,7 @@ jobs:
 
       - name: Publish public API release
         if: env.RELEASE_CHANNEL == 'public' && steps.api.outputs.api_status == 'new' && (github.event_name == 'release' || inputs.update_registry)
-        run: npm publish .release/api-types/package --access public
+        run: npm publish .release/api-types/package --access public --tag "$NPM_DIST_TAG"
 
       - name: Upload API type artifact
         if: steps.api.outputs.api_status != 'existing'
