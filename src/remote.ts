@@ -70,9 +70,15 @@ function outcome(value: unknown): value is RemoteOutcome {
 	return ['rejected', 'cancelled', 'failed'].includes(String(value.status)) && id(value.reason);
 }
 
+/** Session and packet IDs must also work on Foundry's plain HTTP LAN URLs. */
+function randomId(): string {
+	const bytes = crypto.getRandomValues(new Uint8Array(16));
+	return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 /** Foundry supplies sender identity as the second socket callback argument. Never read it from payloads. */
 export class RemoteCamera {
-	readonly #session = crypto.randomUUID();
+	readonly #session = randomId();
 	readonly #pending = new Map<string, Pending>();
 	readonly #incoming = new Map<string, Incoming>();
 	readonly #watchers = new Map<string, Watcher>();
@@ -121,7 +127,7 @@ export class RemoteCamera {
 		if (!me || !sceneId) throw new Error('A ready scene and user are required');
 		if (!users.every(user => this.#authorized(me, user))) return Promise.resolve(users.map(userId => ({ userId, status: 'rejected', outcomes: [{ status: 'rejected', reason: 'unauthorized' }] })));
 		if (this.#pending.size >= 128) throw new Error('Too many pending camera requests');
-		const requestId = crypto.randomUUID();
+		const requestId = randomId();
 		return new Promise((resolve) => {
 			const outcomes = new Map<string, Map<string, RemoteOutcome>>();
 			let timer: ReturnType<typeof setTimeout>;
@@ -162,7 +168,7 @@ export class RemoteCamera {
 		if (!['raw', 'smooth', 'dragRelease'].includes(mode)) throw new TypeError('Invalid tracking mode');
 		if (this.#disposed || !me || !id(userId) || typeof callback !== 'function' || !this.environment.users().some(user => user.id === userId)) throw new Error('Viewport subscription is unavailable or unauthorized');
 		if (this.#watchers.size >= 128) throw new Error('Too many viewport subscriptions');
-		const watchId = crypto.randomUUID();
+		const watchId = randomId();
 		const renew = () => this.#send({ kind: 'watch', id: watchId }, [userId]);
 		const timer = setInterval(renew, 5000);
 		const filter = new ViewportFilter(mode, (sample) => {
