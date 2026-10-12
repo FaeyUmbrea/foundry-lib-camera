@@ -7,6 +7,7 @@ const peers: RemoteCamera[] = [];
 afterEach(() => {
 	for (const peer of peers.splice(0)) peer.dispose();
 	vi.useRealTimers();
+	vi.unstubAllGlobals();
 });
 function setup() {
 	vi.useFakeTimers();
@@ -37,6 +38,26 @@ function setup() {
 }
 
 describe('remote camera', () => {
+	it('starts sessions, moves cameras and watches viewports on plain HTTP without randomUUID', async () => {
+		const getRandomValues = vi.fn(crypto.getRandomValues.bind(crypto));
+		vi.stubGlobal('crypto', { getRandomValues });
+		const { gm, first, second } = setup();
+		const seen = vi.fn();
+		const subscription = gm.remote.watch('player', seen);
+		expect(seen).toHaveBeenCalled();
+		const result = gm.remote.move('obs-utils', 'player', { x: 10 });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(await result).toMatchObject([{ userId: 'player', status: 'acknowledged', outcomes: [{ status: 'completed' }, { status: 'completed' }] }]);
+		expect(first.adapter.pan).toHaveBeenCalledOnce();
+		expect(second.adapter.pan).toHaveBeenCalledOnce();
+		const request = gm.emit.mock.calls.find(([packet]) => (packet as { kind: string }).kind === 'request')![0] as { id: string };
+		const watch = gm.emit.mock.calls.find(([packet]) => (packet as { kind: string }).kind === 'watch')![0] as { id: string };
+		expect(request.id).toMatch(/^[a-f0-9]{32}$/);
+		expect(watch.id).not.toBe(request.id);
+		expect(getRandomValues).toHaveBeenCalledTimes(5);
+		subscription.stop();
+	});
+
 	it('targets every session of a user and collects real acknowledgements', async () => {
 		const { gm, first, second } = setup();
 		const result = gm.remote.move('obs-utils', 'player', { x: 10 });
