@@ -1,4 +1,4 @@
-import type { CameraView3D } from './camera-3d.js';
+import type { Camera3DStatus, CameraView3D } from './camera-3d.js';
 import type { LocalConsumer } from './controller.js';
 import type { CameraBounds, FrameOptions } from './framing.js';
 import type { CameraPosition } from './movement.js';
@@ -21,6 +21,8 @@ export interface ModuleApi {
 	read: () => Readonly<CameraPosition> | undefined;
 	/** Native 3D position and look-at target; absent unless 3D Canvas is active and ready. */
 	read3D: () => Readonly<CameraView3D> | undefined;
+	/** Current 3D availability without inspecting the adapter or moving the camera. */
+	get3DStatus: () => Camera3DStatus;
 	tokenPosition: (tokenId: string) => Readonly<{ x: number; y: number }> | undefined;
 	gridPosition: (row: number, column: number) => Readonly<{ x: number; y: number }> | undefined;
 	/** Stop this client immediately and persist its opt-out. */

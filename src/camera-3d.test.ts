@@ -32,6 +32,19 @@ function setup() {
 }
 
 describe('3D Canvas integration', () => {
+	it('reports adapter status without changing the camera or taking ownership', () => {
+		const { camera, view, controller } = setup();
+		expect(camera.status()).toBe('ready');
+		view.firstPersonMode = true;
+		expect(camera.status()).toBe('unsupported-mode');
+		view._ready = false;
+		expect(camera.status()).toBe('unavailable');
+		view._active = false;
+		expect(camera.status()).toBe('inactive');
+		expect(new Camera3D(() => undefined).status()).toBe('inactive');
+		expect(view.controls.update).not.toHaveBeenCalled();
+		expect(controller.ownership.getClaims()).toHaveLength(0);
+	});
 	it('is unavailable when the optional module is absent', () => {
 		const camera = new Camera3D(() => undefined);
 		expect(camera.read()).toBeUndefined();

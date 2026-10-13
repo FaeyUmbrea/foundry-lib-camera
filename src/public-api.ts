@@ -1,5 +1,5 @@
 export type { ModuleApi } from './api.js';
-export type { CameraResult3D, CameraView3D, Vector3D } from './camera-3d.js';
+export type { Camera3DStatus, CameraResult3D, CameraView3D, Vector3D } from './camera-3d.js';
 export type { CameraSession, LocalConsumer, SessionResult } from './controller.js';
 export type { CameraFollow } from './follow.js';
 export type { CameraBounds, FrameOptions, ViewDimensions } from './framing.js';

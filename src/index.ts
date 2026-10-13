@@ -46,6 +46,7 @@ export const api: ModuleApi = Object.freeze({
 	register: controller.register.bind(controller),
 	read: camera.read.bind(camera),
 	read3D: camera3D.read.bind(camera3D),
+	get3DStatus: camera3D.status.bind(camera3D),
 	tokenPosition: camera.tokenPosition.bind(camera),
 	gridPosition: camera.gridPosition.bind(camera),
 	panic: () => panicLocal(controller),
