@@ -41,3 +41,15 @@ describe('foundry camera adapter', () => {
 		expect(terminateAnimation).toHaveBeenCalled();
 	});
 });
+
+it('frames an unrendered floor token using its document geometry and visibility', () => {
+	const document = { x: 800, y: 900, visible: true, getSize: () => ({ width: 100, height: 100 }) };
+	const adapter = new FoundryCamera(() => ({ ready: true, screenDimensions: [1920, 1080], scene: { id: 'scene', dimensions: { width: 4000, height: 2000, size: 100 }, view: async () => {}, tokens: { get: id => id === 'upper' ? document : undefined } }, tokens: { get: id => id === 'upper' ? { x: 0, y: 0, w: 100, h: 100, center: { x: 50, y: 50 } } : undefined }, pan: vi.fn() }), () => {
+		throw new Error('Unexpected animation');
+	}, new InputLock());
+	expect(adapter.frameTokens(['upper'])).toMatchObject({ x: 850, y: 950 });
+	document.visible = false;
+	expect(adapter.frameTokens(['upper'])).toBeUndefined();
+	// No placeable or document can supply this token.
+	expect(adapter.frameTokens(['missing'])).toBeUndefined();
+});

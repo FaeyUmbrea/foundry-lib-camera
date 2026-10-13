@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.13.2
+
+- Follow multiple users through shared camera ownership, using the latest changed viewport.
+- Observe and follow native 3D views, and report 3D camera availability through the API and status hook.
+- Fit the full scene through a consumer or an existing camera session.
+- Frame tokens from stable document coordinates during redraws and floor changes.
+- Keep following when a source briefly selects an unavailable floor.
+
+
 ## 1.13.1
 
 - Fix startup, remote camera movement and viewport subscriptions on plain HTTP addresses.

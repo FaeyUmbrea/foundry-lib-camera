@@ -6,6 +6,9 @@ export interface CameraView3D {
 	position: Readonly<Vector3D>;
 	target: Readonly<Vector3D>;
 }
+/** Availability of native 3D camera control, reported to consuming modules. */
+export type Camera3DStatus = 'inactive' | 'unavailable' | 'unsupported-mode' | 'ready';
+
 export type CameraResult3D
 	= | { status: 'completed'; view: Readonly<CameraView3D> }
 		| { status: 'rejected'; reason: RejectionReason | 'invalid-input' | 'inactive-claim' | 'unavailable' | 'unsupported-mode' }
@@ -54,6 +57,12 @@ export class Camera3D {
 		const view = this.getCanvas();
 		if (!view?._active || !view._ready || !validVector(view.camera?.position) || !validVector(view.controls?.target)) return;
 		return snapshot(view);
+	}
+
+	/** Reports whether 3D Canvas is inactive, loading, in an unsupported mode or controllable. */
+	status(): Camera3DStatus {
+		if (!this.getCanvas()?._active) return 'inactive';
+		return this.availability() ?? 'ready';
 	}
 
 	availability(): 'unavailable' | 'unsupported-mode' | undefined {

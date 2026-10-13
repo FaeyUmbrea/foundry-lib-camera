@@ -1,4 +1,4 @@
-import type { CameraBounds } from './framing.js';
+import type { CameraBounds, FrameOptions } from './framing.js';
 import type { CameraClaim, ReleaseReason } from './ownership.js';
 import { validBounds } from './framing.js';
 
@@ -28,6 +28,8 @@ export type MovementResult
 /** Boundary to Foundry. Adapters must stop writing synchronously when aborted. */
 export interface CameraAdapter {
 	read: () => Readonly<CameraPosition> | undefined;
+	/** Compute the view fitting the current scene without moving the camera. */
+	frameScene?: (options?: FrameOptions) => CameraPosition | undefined;
 	pan: (position: CameraPosition) => void;
 	animate: (position: CameraPosition, options: Required<Pick<MoveOptions, 'duration' | 'easing'>>, signal: AbortSignal) => Promise<boolean>;
 	lockInput: () => () => void;

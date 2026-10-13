@@ -4,6 +4,7 @@ import type { CameraPosition, MovementResult, MoveOptions } from './movement.js'
 import type { TrackingMode } from './viewport-filter.js';
 import { validView3D } from './camera-3d.js';
 import { validMove } from './movement.js';
+import { followRemote3D } from './remote-3d-follow.js';
 import { ViewportFilter } from './viewport-filter.js';
 
 export type RemoteOutcome = MovementResult | CameraResult3D | {
@@ -25,6 +26,12 @@ export interface ViewportSample {
 	sceneId: string;
 	position: Readonly<CameraPosition>;
 }
+/** Native 3D view from a responding user on a particular scene. */
+export interface ViewportSample3D {
+	userId: string;
+	sceneId: string;
+	view: Readonly<CameraView3D> | null;
+}
 export interface ViewportSubscription { stop: () => void }
 export interface RemoteEnvironment {
 	userId: () => string | undefined;
@@ -35,6 +42,7 @@ export interface RemoteEnvironment {
 	}[];
 	sceneId: () => string | undefined;
 	read: () => Readonly<CameraPosition> | undefined;
+	read3D?: () => Readonly<CameraView3D> | undefined;
 	emit: (packet: object, recipients: string[]) => void;
 }
 interface Pending {
@@ -52,6 +60,22 @@ interface Watcher {
 	userId: string;
 	callback: (sample: ViewportSample) => void;
 	timer: ReturnType<typeof setInterval>;
+}
+
+/** Native 3D callback and renewal timer for one requested user. */
+interface Watcher3D {
+	userId: string;
+	callback: (sample: ViewportSample3D) => void;
+	timer: ReturnType<typeof setInterval>;
+}
+
+/** A recipient's expiring subscription, with change detection for native 3D samples. */
+interface ViewportRecipient {
+	userId: string;
+	id: string;
+	expires: number;
+	dimension?: '3d';
+	last3D?: string;
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -82,11 +106,9 @@ export class RemoteCamera {
 	readonly #pending = new Map<string, Pending>();
 	readonly #incoming = new Map<string, Incoming>();
 	readonly #watchers = new Map<string, Watcher>();
-	readonly #subscribers = new Map<string, {
-		userId: string;
-		id: string;
-		expires: number;
-	}>();
+	readonly #watchers3D = new Map<string, Watcher3D>();
+	#camera3DTimer?: ReturnType<typeof setInterval>;
+	readonly #subscribers = new Map<string, ViewportRecipient>();
 
 	#publishTimer?: ReturnType<typeof setTimeout>;
 	#disposed = false;
@@ -188,18 +210,58 @@ export class RemoteCamera {
 		} };
 	}
 
-	/** Follow the latest responding session of a user on this scene; all sessions remain addressable together. */
-	followUser(consumerId: string, userId: string, options: Pick<MoveOptions, 'duration' | 'easing' | 'bounds' | 'lockInput'> = {}, mode: TrackingMode = 'smooth') {
+	/** Subscribe to native 3D samples; sender identity is checked before delivering each sample. */
+	watch3D(userId: string, callback: (sample: ViewportSample3D) => void): ViewportSubscription {
+		if (this.#disposed || !this.environment.userId() || !id(userId) || typeof callback !== 'function' || !this.environment.users().some(user => user.id === userId)) throw new Error('3D viewport subscription is unavailable');
+		if (this.#watchers3D.size >= 128) throw new Error('Too many 3D viewport subscriptions');
+		const watchId = randomId();
+		const renew = () => this.#send({ kind: 'watch', id: watchId, dimension: '3d' }, [userId]);
+		const timer = setInterval(renew, 5000);
+		this.#watchers3D.set(watchId, { userId, callback, timer });
+		renew();
+		return { stop: () => {
+			if (!this.#watchers3D.delete(watchId)) return;
+			clearInterval(timer);
+			this.#send({ kind: 'unwatch', id: watchId }, [userId]);
+		} };
+	}
+
+	/** Acquire a camera claim and copy a user's native 3D samples until stopped or preempted. */
+	followUser3D(consumerId: string, userId: string) {
 		const consumer = this.controller.consumers.get(consumerId);
 		if (!consumer) return { ok: false as const, reason: 'unregistered' as const };
+		const result = consumer.acquire();
+		if (!result.ok) return result;
+		return { ok: true as const, follow: followRemote3D(result.claim, callback => this.watch3D(userId, callback), this.environment.sceneId) };
+	}
+
+	/** Follow the most recently changed viewport among the consumer-selected users on this scene. */
+	followUser(consumerId: string, userId: string | readonly string[], options: Pick<MoveOptions, 'duration' | 'easing' | 'bounds' | 'lockInput'> = {}, mode: TrackingMode = 'smooth') {
+		const consumer = this.controller.consumers.get(consumerId);
+		if (!consumer) return { ok: false as const, reason: 'unregistered' as const };
+		const userIds = [...new Set(typeof userId === 'string' ? [userId] : userId)];
+		if (!userIds.length || userIds.length > 128) throw new TypeError('Follow requires between 1 and 128 users');
 		let latest: ViewportSample | undefined;
-		const subscription = this.watch(userId, (sample) => {
-			latest = sample;
-		}, mode);
-		const result = consumer.follow(() => latest && latest.sceneId === this.environment.sceneId() ? { duration: 33, easing: 'linear', ...options, ...latest.position } : undefined);
-		if (!result.ok) subscription.stop();
-		else void result.follow.done.finally(subscription.stop);
-		return result;
+		const previous = new Map<string, string>();
+		const subscriptions: ViewportSubscription[] = [];
+		const stop = () => subscriptions.forEach(subscription => subscription.stop());
+		try {
+			for (const source of userIds) {
+				subscriptions.push(this.watch(source, (sample) => {
+					const identity = JSON.stringify([sample.sceneId, sample.position]);
+					if (previous.get(source) === identity) return;
+					previous.set(source, identity);
+					latest = sample;
+				}, mode));
+			}
+			const result = consumer.follow(() => latest && latest.sceneId === this.environment.sceneId() ? { duration: 33, easing: 'linear', ...options, ...latest.position } : undefined);
+			if (!result.ok) stop();
+			else void result.follow.done.finally(stop);
+			return result;
+		} catch (error) {
+			stop();
+			throw error;
+		}
 	}
 
 	/** Bound socket traffic to approximately 30 Hz, retaining the newest sample. */
@@ -217,7 +279,33 @@ export class RemoteCamera {
 	#snapshot(userId: string, watchId: string): void {
 		const view = this.environment.read();
 		const sceneId = this.environment.sceneId();
-		if (view && sceneId) this.#send({ kind: 'view', id: watchId, sceneId, position: view }, [userId]);
+		if (this.#subscribers.get(`${userId}:${watchId}`)?.dimension === '3d') {
+			const view3D = this.environment.read3D?.();
+			const subscriber = this.#subscribers.get(`${userId}:${watchId}`)!;
+			const serialized = JSON.stringify([sceneId, view3D ?? null]);
+			if (subscriber.last3D === serialized) return;
+			subscriber.last3D = serialized;
+			if (sceneId) this.#send({ kind: 'view3D', id: watchId, sceneId, view: view3D ?? null }, [userId]);
+		} else if (view && sceneId) {
+			this.#send({ kind: 'view', id: watchId, sceneId, position: view }, [userId]);
+		}
+	}
+
+	/** Poll native 3D subscriptions and stop the timer when none remain. */
+	#publish3D(): void {
+		let active = false;
+		for (const [entry, subscriber] of this.#subscribers) {
+			if (subscriber.expires < Date.now()) {
+				this.#subscribers.delete(entry);
+			} else if (subscriber.dimension === '3d') {
+				active = true;
+				this.#snapshot(subscriber.userId, subscriber.id);
+			}
+		}
+		if (!active) {
+			clearInterval(this.#camera3DTimer);
+			this.#camera3DTimer = undefined;
+		}
 	}
 
 	async receive(packet: unknown, sender: unknown): Promise<void> {
@@ -231,6 +319,16 @@ export class RemoteCamera {
 			const responses = pending.outcomes.get(sender) ?? new Map<string, RemoteOutcome>();
 			if (responses.size < 128) responses.set(packet.session, packet.result);
 			pending.outcomes.set(sender, responses);
+			return;
+		}
+		if (packet.kind === 'view3D') {
+			const watcher = this.#watchers3D.get(packet.id);
+			if (watcher?.userId !== sender || !id(packet.sceneId) || (packet.view !== null && !validView3D(packet.view as CameraView3D))) return;
+			try {
+				watcher.callback({ userId: sender, sceneId: packet.sceneId, view: packet.view === null ? null : structuredClone(packet.view as CameraView3D) });
+			} catch (error) {
+				console.error('libCamera: 3D viewport observer failed', error);
+			}
 			return;
 		}
 		if (packet.kind === 'view') {
@@ -258,7 +356,8 @@ export class RemoteCamera {
 				if (subscriber.expires < Date.now()) this.#subscribers.delete(entry);
 			}
 			if (this.#subscribers.size >= 128 && !this.#subscribers.has(key)) return;
-			this.#subscribers.set(key, { userId: sender, id: packet.id, expires: Date.now() + 15000 });
+			this.#subscribers.set(key, { userId: sender, id: packet.id, expires: Date.now() + 15000, dimension: packet.dimension === '3d' ? '3d' : undefined });
+			if (packet.dimension === '3d') this.#camera3DTimer ??= setInterval(() => this.#publish3D(), 33);
 			this.#snapshot(sender, packet.id);
 			return;
 		}
@@ -303,6 +402,9 @@ export class RemoteCamera {
 	dispose(): void {
 		this.#disposed = true;
 		clearTimeout(this.#publishTimer);
+		clearInterval(this.#camera3DTimer);
+		for (const watcher of this.#watchers3D.values()) clearInterval(watcher.timer);
+		this.#watchers3D.clear();
 		for (const pending of this.#pending.values()) pending.finish(true);
 		for (const incoming of this.#incoming.values()) incoming.abort.abort();
 		for (const watcher of this.#watchers.values()) {

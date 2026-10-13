@@ -1,5 +1,5 @@
-import type { CameraView3D } from './camera-3d.js';
-import type { LocalConsumer } from './controller.js';
+import type { Camera3DStatus, CameraView3D } from './camera-3d.js';
+import type { CameraController, LocalConsumer } from './controller.js';
 import type { CameraBounds, FrameOptions } from './framing.js';
 import type { CameraPosition } from './movement.js';
 import type { ConsumerOptions } from './ownership.js';
@@ -12,6 +12,12 @@ export interface ModuleApi {
 	set3DRemote: RemoteCamera['set3D'];
 	observeUser: RemoteCamera['watch'];
 	followUser: RemoteCamera['followUser'];
+	/** Observe a user’s native 3D viewport without taking camera ownership. */
+	observeUser3D: RemoteCamera['watch3D'];
+	/** Copy a user’s native 3D view while holding a libCamera claim. */
+	followUser3D: RemoteCamera['followUser3D'];
+	/** Fit the current scene using a registered consumer's camera ownership and movement options. */
+	fitScene: CameraController['fitScene'];
 	/** Compute views without taking ownership or moving the camera. */
 	frame: (bounds: readonly CameraBounds[], options?: FrameOptions) => CameraPosition | undefined;
 	frameTokens: (tokenIds: readonly string[], options?: FrameOptions) => CameraPosition | undefined;
@@ -21,6 +27,8 @@ export interface ModuleApi {
 	read: () => Readonly<CameraPosition> | undefined;
 	/** Native 3D position and look-at target; absent unless 3D Canvas is active and ready. */
 	read3D: () => Readonly<CameraView3D> | undefined;
+	/** Current 3D availability without inspecting the adapter or moving the camera. */
+	get3DStatus: () => Camera3DStatus;
 	tokenPosition: (tokenId: string) => Readonly<{ x: number; y: number }> | undefined;
 	gridPosition: (row: number, column: number) => Readonly<{ x: number; y: number }> | undefined;
 	/** Stop this client immediately and persist its opt-out. */

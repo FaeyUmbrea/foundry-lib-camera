@@ -25,6 +25,7 @@ const remote = new RemoteCamera(controller, {
 	users: () => game.users?.contents.map(user => ({ id: user.id, isGM: user.isGM, active: user.active })) ?? [],
 	sceneId: () => canvas?.scene?.id,
 	read: camera.read.bind(camera),
+	read3D: camera3D.read.bind(camera3D),
 	emit: (packet, recipients) => {
 		if (!game.socket) throw new Error('Foundry socket is unavailable');
 		game.socket.emit('module.lib-camera', packet, { recipients });
@@ -40,12 +41,16 @@ export const api: ModuleApi = Object.freeze({
 	set3DRemote: remote.set3D.bind(remote),
 	observeUser: remote.watch.bind(remote),
 	followUser: remote.followUser.bind(remote),
+	observeUser3D: remote.watch3D.bind(remote),
+	followUser3D: remote.followUser3D.bind(remote),
+	fitScene: controller.fitScene.bind(controller),
 	frame: camera.frame.bind(camera),
 	frameTokens: camera.frameTokens.bind(camera),
 	sceneBounds: camera.sceneBounds.bind(camera),
 	register: controller.register.bind(controller),
 	read: camera.read.bind(camera),
 	read3D: camera3D.read.bind(camera3D),
+	get3DStatus: camera3D.status.bind(camera3D),
 	tokenPosition: camera.tokenPosition.bind(camera),
 	gridPosition: camera.gridPosition.bind(camera),
 	panic: () => panicLocal(controller),
@@ -80,6 +85,16 @@ Hooks.once('init', () => {
 });
 
 Hooks.once('ready', () => {
+	if (game.modules?.get('levels-3d-preview')?.active) {
+		let previous3DStatus = camera3D.status();
+		// Native free/GameCamera switches do not emit a Foundry hook.
+		setInterval(() => {
+			const status = camera3D.status();
+			if (status === previous3DStatus) return;
+			previous3DStatus = status;
+			Hooks.callAll('lib-camera.3DStatusChanged', status);
+		}, 150);
+	}
 	game.socket?.on('module.lib-camera', (packet: unknown, sender: unknown) => {
 		void remote.receive(packet, sender).catch(error => console.error('libCamera: remote request failed', error));
 	});

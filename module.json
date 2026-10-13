@@ -2,7 +2,7 @@
 	"id": "lib-camera",
 	"title": "libCamera",
 	"description": "Shared camera ownership, priorities and viewport control for Foundry VTT.",
-	"version": "1.13.1",
+	"version": "1.13.2",
 	"compatibility": {
 		"minimum": "13.351",
 		"verified": "13.351",
@@ -43,7 +43,7 @@
 	],
 	"url": "https://github.com/FaeyUmbrea/foundry-lib-camera",
 	"manifest": "https://raw.githubusercontent.com/FaeyUmbrea/foundry-lib-camera/13/module.json",
-	"download": "https://github.com/FaeyUmbrea/foundry-lib-camera/releases/download/v1.13.1/module.zip",
+	"download": "https://github.com/FaeyUmbrea/foundry-lib-camera/releases/download/v1.13.2/module.zip",
 	"readme": "https://github.com/FaeyUmbrea/foundry-lib-camera/blob/13/README.md",
 	"license": "Apache-2.0",
 	"socket": true,

@@ -10,6 +10,8 @@ import { CameraCoordinator } from './ownership.js';
 export interface CameraSession extends CameraClaim {
 	/** Replace this claim's current movement, continuing from the actual view. */
 	retarget: (options: MoveOptions, signal?: AbortSignal) => Promise<MovementResult>;
+	/** Fit the full scene through this session, replacing its current movement. */
+	fitScene: (options?: Pick<MoveOptions, 'duration' | 'easing' | 'level' | 'bounds' | 'lockInput'>, signal?: AbortSignal) => Promise<MovementResult>;
 	set3D: (view: CameraView3D) => CameraResult3D;
 	move: (options: MoveOptions, signal?: AbortSignal) => Promise<MovementResult>;
 }
@@ -58,6 +60,20 @@ export class CameraController {
 		return this.adapter.read();
 	}
 
+	/** Fit the current scene through a registered consumer's normal ownership and movement checks. */
+	async fitScene(consumerId: string, options: Pick<MoveOptions, 'duration' | 'easing' | 'level' | 'bounds' | 'lockInput'> = {}, signal?: AbortSignal): ReturnType<LocalConsumer['move']> {
+		const consumer = this.consumers.get(consumerId);
+		if (!consumer) return { status: 'rejected', reason: 'unregistered' };
+		if (signal?.aborted) return { status: 'cancelled', reason: 'cancelled' };
+		const result = consumer.acquire();
+		if (!result.ok) return { status: 'rejected', reason: result.reason };
+		try {
+			return await result.claim.fitScene(options, signal);
+		} finally {
+			result.claim.release();
+		}
+	}
+
 	register(options: ConsumerOptions): LocalConsumer {
 		const consumer = this.ownership.register(options);
 		const acquire = (): SessionResult => {
@@ -97,6 +113,11 @@ export class CameraController {
 				release: claim.release,
 				move,
 				retarget,
+				fitScene: (options: Pick<MoveOptions, 'duration' | 'easing' | 'level' | 'bounds' | 'lockInput'> = {}, signal?: AbortSignal): Promise<MovementResult> => {
+					const position = this.adapter.frameScene?.();
+					if (!position) return Promise.resolve({ status: 'rejected', reason: 'unavailable' });
+					return retarget({ ...options, ...position, level: options.level }, signal);
+				},
 			});
 			this.#sessions.set(userId, session);
 			claim.signal.addEventListener('abort', () => {
