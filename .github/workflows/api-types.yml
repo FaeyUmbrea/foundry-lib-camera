@@ -9,6 +9,11 @@ on:
         description: Existing release tag to receive the rebuilt artifact
         required: true
         type: string
+      publish_foundry:
+        description: Register the published module release in Foundry's package directory
+        required: true
+        default: false
+        type: boolean
       source_ref:
         description: Source ref containing the API declarations
         required: false
@@ -74,3 +79,28 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$RELEASE_TAG" lib-camera-api-types.tgz --clobber
+
+      - name: Register release with Foundry
+        if: github.event_name == 'release' || inputs.publish_foundry
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FVTT_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
+        run: |
+          test -n "$FVTT_TOKEN"
+          gh release download "$RELEASE_TAG" --pattern module.json --dir /tmp/foundry-release
+          jq -e --arg tag "$RELEASE_TAG" '.id == "lib-camera" and ("v" + .version == $tag) and (.protected != true)' /tmp/foundry-release/module.json
+          jq -n \
+            --arg id "$(jq -r .id /tmp/foundry-release/module.json)" \
+            --arg version "$(jq -r .version /tmp/foundry-release/module.json)" \
+            --arg manifest "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/module.json" \
+            --arg notes "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG" \
+            --argjson compatibility "$(jq .compatibility /tmp/foundry-release/module.json)" \
+            '{id: $id, release: {version: $version, manifest: $manifest, notes: $notes, compatibility: $compatibility}}' \
+            > /tmp/foundry-release/payload.json
+          curl --fail-with-body \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --header "Authorization: $FVTT_TOKEN" \
+            --data @/tmp/foundry-release/payload.json \
+            https://api.foundryvtt.com/_api/packages/release_version/ \
+            | jq -e '.status == "success"'
