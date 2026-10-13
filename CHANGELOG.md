@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.1
+
+- Fix startup, remote camera movement and viewport subscriptions on plain HTTP addresses.
+
 ## Initial release — 1.13.0 and 1.14.0
 
 - Shared camera ownership, priorities, explicit claims and cancellation.
