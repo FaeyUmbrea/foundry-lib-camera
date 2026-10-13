@@ -139,3 +139,37 @@ describe('remote camera', () => {
 		expect((await first.remote.move('obs-utils', 'gm', { x: 1 }))[0].status).toBe('rejected');
 	});
 });
+
+it('authenticates native 3D samples and stops delivering them after unsubscribe', async () => {
+	const { gm, first } = setup();
+	const seen = vi.fn();
+	const subscription = gm.remote.watch3D('player', seen);
+	const watch = gm.emit.mock.calls.find(([packet]) => (packet as { dimension?: string }).dimension === '3d')![0] as { id: string };
+	const view = { position: { x: 1, y: 2, z: 3 }, target: { x: 0, y: 0, z: 0 } };
+	const packet = { kind: 'view3D', id: watch.id, sceneId: 'scene', view };
+	seen.mockClear();
+	await gm.remote.receive(packet, 'gm');
+	await gm.remote.receive({ ...packet, view: { position: null } }, 'player');
+	expect(seen).not.toHaveBeenCalled();
+	await gm.remote.receive(packet, 'player');
+	expect(seen).toHaveBeenCalledExactlyOnceWith({ userId: 'player', sceneId: 'scene', view });
+	subscription.stop();
+	await gm.remote.receive(packet, 'player');
+	expect(seen).toHaveBeenCalledOnce();
+	expect(first.emit).toHaveBeenCalled();
+});
+
+it('follows the latest changing source when more than one user is selected', async () => {
+	const { gm, first, second } = setup();
+	const result = first.remote.followUser('obs-utils', ['gm', 'player'], { duration: 0 }, 'raw');
+	if (!result.ok) throw new Error('Expected follow');
+	gm.adapter.pan({ x: 30, y: 40, scale: 1 });
+	gm.remote.publish();
+	await vi.advanceTimersByTimeAsync(100);
+	expect(first.controller.read()?.x).toBe(30);
+	second.adapter.pan({ x: 80, y: 90, scale: 1 });
+	second.remote.publish();
+	await vi.advanceTimersByTimeAsync(100);
+	expect(first.controller.read()?.x).toBe(80);
+	result.follow.stop();
+});

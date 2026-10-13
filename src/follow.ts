@@ -43,7 +43,8 @@ export function followCamera(session: CameraSession, source: () => MoveOptions |
 			if (key === last) return;
 			last = key;
 			void session.retarget(view, operation.signal).then((result) => {
-				if (result.status === 'failed' || result.status === 'rejected') end(result);
+				// An unavailable floor/view holds the last frame until another source sample arrives.
+				if (result.status === 'failed' || (result.status === 'rejected' && result.reason !== 'unavailable')) end(result);
 			});
 		} catch {
 			end({ status: 'failed', reason: 'adapter-error' });

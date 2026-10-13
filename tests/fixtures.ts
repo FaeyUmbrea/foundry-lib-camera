@@ -7,7 +7,7 @@ export interface CameraModule { api: ModuleApi; active: boolean }
 // Same users, login flow and separate browser contexts as OBS Utils' fixture.
 async function join(page: Page, name: string): Promise<void> {
 	await page.goto('/join');
-	await page.locator('select[name="userid"]').selectOption({ label: name });
+	await page.locator('select[name="userid" i]').selectOption({ label: name });
 	await page.locator('input[name=password]').fill(process.env.TEST_INSTALL_PASSWORD ?? '');
 	await page.getByRole('button', { name: 'Join Game Session' }).click();
 	await expect(page).toHaveURL('/game');
@@ -24,9 +24,9 @@ export const test = testBase.extend<{ pages: { gmPage: Page; obsPage: Page; play
 			await join(gmPage, 'Gamemaster');
 			const enabled = await gmPage.evaluate(async (with3D) => {
 				if (!['obs-fixture-v13', 'obs-fixture-v14'].includes(game.world?.id ?? '')) throw new Error('Tests require an OBS Utils fixture world');
-				if ((game.modules?.get('lib-camera') as unknown as CameraModule)?.active && (!with3D || game.modules?.get('levels-3d-preview')?.active)) return true;
+				if (!game.modules?.get('obs-utils')?.active && !game.modules?.get('obs-utils-premium')?.active && (game.modules?.get('lib-camera') as unknown as CameraModule)?.active && (!with3D || game.modules?.get('levels-3d-preview')?.active)) return true;
 				if (!game.settings) throw new Error('Settings are unavailable');
-				await game.settings.set('core', 'moduleConfiguration', { 'lib-wrapper': true, 'lib-camera': true, ...(with3D ? { 'levels-3d-preview': true } : {}) });
+				await game.settings.set('core', 'moduleConfiguration', { 'lib-wrapper': true, 'lib-camera': true, 'obs-utils': false, 'obs-utils-premium': false, ...(with3D ? { 'levels-3d-preview': true } : {}) });
 				return false;
 			}, process.env.TEST_3D_CANVAS === '1');
 			if (!enabled) {

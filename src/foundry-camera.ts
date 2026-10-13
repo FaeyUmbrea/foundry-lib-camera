@@ -13,6 +13,7 @@ interface CanvasView {
 		dimensions: { width: number; height: number; size: number };
 		availableLevels?: Set<{ id: string }>;
 		view: (options: { level: string }) => Promise<unknown>;
+		tokens?: { get: (id: string) => { x: number; y: number; visible?: boolean; getSize?: () => { width: number; height: number } } | undefined };
 	};
 	ready: boolean;
 	stage?: { pivot: { x: number; y: number }; scale: { x: number } };
@@ -82,12 +83,31 @@ export class FoundryCamera implements CameraAdapter {
 		return screen ? frameBounds(bounds, screen, options) : undefined;
 	}
 
+	/** Compute a viewport fitting the complete current scene into this client's screen. */
+	frameScene(options?: FrameOptions): CameraPosition | undefined {
+		const bounds = this.sceneBounds();
+		return bounds ? this.frame([bounds], options) : undefined;
+	}
+
 	frameTokens(ids: readonly string[], options?: FrameOptions): CameraPosition | undefined {
 		const view = this.getCanvas();
 		if (!view?.ready || !Array.isArray(ids) || ids.length > 1000) return;
-		const tokens = ids.map(id => view.tokens?.get(id));
-		if (tokens.some(token => !token || token.visible === false)) return;
-		return this.frame(tokens.map(token => ({ x: token!.x, y: token!.y, width: token!.w, height: token!.h })), options);
+		const bounds: CameraBounds[] = [];
+		for (const id of ids) {
+			const token = view.tokens?.get(id);
+			const document = view.scene?.tokens?.get(id);
+			if (token?.visible === false || document?.visible === false) return;
+			// Document coordinates remain valid during redraws and on unrendered floors.
+			const size = document?.getSize?.();
+			if (document && size) {
+				bounds.push({ x: document.x, y: document.y, width: size.width, height: size.height });
+			} else if (token) {
+				bounds.push({ x: document?.x ?? token.x, y: document?.y ?? token.y, width: token.w, height: token.h });
+			} else {
+				return;
+			}
+		}
+		return this.frame(bounds, options);
 	}
 
 	constructor(

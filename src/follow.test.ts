@@ -1,6 +1,8 @@
+import type { CameraSession } from './controller.js';
 import type { CameraAdapter } from './movement.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CameraController } from './controller.js';
+import { followCamera } from './follow.js';
 
 afterEach(() => vi.useRealTimers());
 function setup() {
@@ -56,4 +58,20 @@ describe('continuous camera control', () => {
 		expect(await result.follow.done).toEqual({ status: 'cancelled', reason: 'panic' });
 		expect(vi.getTimerCount()).toBe(0);
 	});
+});
+
+
+it('holds an unavailable source view and follows the next available sample', async () => {
+	vi.useFakeTimers();
+	let x = 10;
+	const retarget = vi.fn().mockResolvedValueOnce({ status: 'rejected', reason: 'unavailable' }).mockResolvedValue({ status: 'completed' });
+	const session = { active: true, signal: new AbortController().signal, release: vi.fn(), retarget } as unknown as CameraSession;
+	const follow = followCamera(session, () => ({ x }));
+	await vi.advanceTimersByTimeAsync(33);
+	expect(follow.active).toBe(true);
+	x = 20;
+	await vi.advanceTimersByTimeAsync(33);
+	expect(retarget).toHaveBeenLastCalledWith({ x: 20 }, expect.any(AbortSignal));
+	follow.stop();
+	expect(session.release).toHaveBeenCalledOnce();
 });
