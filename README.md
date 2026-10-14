@@ -21,3 +21,5 @@ Help translate on [Void Monster Translations](https://translate.void.monster/pro
 ## 3D Canvas credit
 
 This module features the [3D Canvas](https://theripper93.com/module/levels-3d-preview) module by [theripper93](https://theripper93.com/) through its optional camera integration.
+
+3D Canvas has its own [Terms of Use](https://www.patreon.com/theripper93/posts/terms-of-use-65901721). libCamera's Apache-2.0 license does not apply to 3D Canvas. If your module uses this integration, review those terms, including permission and commercial-credit requirements. Contact [theripper93 on Discord](https://discord.theripper93.com/) if you need permission or clarification.
