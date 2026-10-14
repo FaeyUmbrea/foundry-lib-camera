@@ -16,7 +16,13 @@ Licensed under Apache-2.0.
 
 ## Translation
 
-Help translate on [Void Monster Translations](https://translate.void.monster/projects/lib-camera/module/). Please submit human translations in languages you know.
+Translations are managed on [Void Monster Translations](https://translate.void.monster/projects/lib-camera/module/). Contributions are invitation-only.
+
+1. Contact me on [Discord](https://discord.com/invite/WfMaKPPdeM) or by [email](mailto:contact@void.monster). Tell me which languages you speak fluently and confirm in writing that you will only submit translations you manually write or personally review in full.
+2. I'll invite you to Weblate with translation and review access for those confirmed languages.
+3. Accept the contributor confirmation in Weblate, then translate or review existing strings. Only approve strings you have personally reviewed.
+
+Only approved translations are submitted to the repositories. You can help bring back existing community translations by reviewing them.
 
 ## 3D Canvas credit
 
