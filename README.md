@@ -13,3 +13,7 @@ and [Foundry 14](https://github.com/FaeyUmbrea/foundry-lib-camera/releases/tag/v
 - [User documentation](https://docs.void.monster/lib-camera/)
 
 Licensed under Apache-2.0.
+
+## 3D Canvas credit
+
+This module features the [3D Canvas](https://theripper93.com/module/levels-3d-preview) module by [theripper93](https://theripper93.com/) through its optional camera integration.
