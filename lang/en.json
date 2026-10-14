@@ -25,7 +25,8 @@
 			"World": "World-wide controls (GM)",
 			"WorldPanic": "Stop and disable for everyone",
 			"WorldResume": "Re-enable for everyone",
-			"Diagnostics": "Recent ownership events"
+			"Diagnostics": "Recent ownership events",
+			"Credit3D": "3D Canvas by theripper93"
 		}
 	}
 }
