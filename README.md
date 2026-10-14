@@ -20,7 +20,7 @@ Translations are managed on [Void Monster Translations](https://translate.void.m
 
 1. Contact me on [Discord](https://discord.com/invite/WfMaKPPdeM) or by [email](mailto:contact@void.monster). Tell me which languages you speak fluently and confirm in writing that you will only submit translations you manually write or personally review in full.
 2. I'll invite you to Weblate with translation and review access for those confirmed languages.
-3. Accept the contributor confirmation in Weblate, then translate or review existing strings. Only approve strings you have personally reviewed.
+3. Accept the [Translation Contributor Agreement](https://translate.void.monster/legal/terms/) in Weblate, then translate or review existing strings. Only approve strings you have personally reviewed.
 
 Only approved translations are submitted to the repositories. You can help bring back existing community translations by reviewing them.
 
@@ -29,3 +29,7 @@ Only approved translations are submitted to the repositories. You can help bring
 This module features the [3D Canvas](https://theripper93.com/module/levels-3d-preview) module by [theripper93](https://theripper93.com/) through its optional camera integration.
 
 3D Canvas has its own [Terms of Use](https://www.patreon.com/theripper93/posts/terms-of-use-65901721). libCamera's Apache-2.0 license does not apply to 3D Canvas. If your module uses this integration, review those terms, including permission and commercial-credit requirements. Contact [theripper93 on Discord](https://discord.theripper93.com/) if you need permission or clarification.
+
+## Code contributions
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) and accept the [Code Contributor Agreement v1.0](CONTRIBUTOR-AGREEMENT.md) before submitting code.
