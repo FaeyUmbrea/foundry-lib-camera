@@ -17,3 +17,7 @@ Licensed under Apache-2.0.
 ## Translation
 
 Help translate on [Void Monster Translations](https://translate.void.monster/projects/lib-camera/module/). Please submit human translations in languages you know.
+
+## 3D Canvas credit
+
+This module features the [3D Canvas](https://theripper93.com/module/levels-3d-preview) module by [theripper93](https://theripper93.com/) through its optional camera integration.

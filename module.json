@@ -1,7 +1,7 @@
 {
 	"id": "lib-camera",
 	"title": "libCamera",
-	"description": "Shared camera ownership, priorities and viewport control for Foundry VTT.",
+	"description": "Shared camera ownership, priorities and viewport control for Foundry VTT. This module features the 3D Canvas module by theripper93. For more information visit https://theripper93.com/.",
 	"version": "1.14.2",
 	"compatibility": {
 		"minimum": "14",
