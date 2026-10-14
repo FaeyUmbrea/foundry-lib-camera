@@ -14,6 +14,16 @@ and [Foundry 14](https://github.com/FaeyUmbrea/foundry-lib-camera/releases/tag/v
 
 Licensed under Apache-2.0.
 
+## Translation
+
+Translations are managed on [Void Monster Translations](https://translate.void.monster/projects/lib-camera/module/). Contributions are invitation-only.
+
+1. Contact me on [Discord](https://discord.com/invite/WfMaKPPdeM) or by [email](mailto:contact@void.monster). Tell me which languages you speak fluently and confirm in writing that you will only submit translations you manually write or personally review in full.
+2. I'll invite you to Weblate with translation and review access for those confirmed languages.
+3. Accept the contributor confirmation in Weblate, then translate or review existing strings. Only approve strings you have personally reviewed.
+
+Only approved translations are submitted to the repositories. You can help bring back existing community translations by reviewing them.
+
 ## 3D Canvas credit
 
 This module features the [3D Canvas](https://theripper93.com/module/levels-3d-preview) module by [theripper93](https://theripper93.com/) through its optional camera integration.
