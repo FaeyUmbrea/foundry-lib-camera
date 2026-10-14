@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.3
+
+- Credit theripper93 for 3D Canvas in Camera Controls, module details and the README.
+
 ## 1.13.2
 
 - Follow multiple users through shared camera ownership, using the latest changed viewport.
